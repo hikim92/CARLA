@@ -9,6 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
+#include "carla/sensor/s11n/ImageCompressSerializer.h"
 
 namespace carla {
 namespace sensor {
@@ -21,8 +22,10 @@ namespace data {
   protected:
 
     using Serializer = s11n::ImageSerializer;
+    using CompressSerializer = s11n::ImageCompressSerializer;
 
     friend Serializer;
+    friend CompressSerializer;
 
     explicit ImageTmpl(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {

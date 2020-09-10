@@ -105,6 +105,7 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/sensor/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
+    "${libcarla_source_path}/carla/sensor/s11n/ImageCompressSerializer.cpp"
     "${libcarla_source_path}/carla/streaming/*.h"
     "${libcarla_source_path}/carla/streaming/detail/*.cpp"
     "${libcarla_source_path}/carla/streaming/detail/*.h"

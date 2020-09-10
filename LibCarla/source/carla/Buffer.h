@@ -266,6 +266,11 @@ namespace carla {
     /// Resize the buffer, a new block of size @a size is
     /// allocated if the capacity is not enough and the data is copied.
     void resize(uint64_t size) {
+      if(_data==nullptr) {
+          _data = std::make_unique<value_type[]>(size);
+          _size = static_cast<size_type>(size);
+          _capacity = _size;
+      }
       if(_capacity < size) {
         std::unique_ptr<value_type[]> data = std::move(_data);
         uint64_t old_size = size;
