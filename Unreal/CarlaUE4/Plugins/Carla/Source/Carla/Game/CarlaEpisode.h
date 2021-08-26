@@ -13,6 +13,7 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Settings/HUDValues.h"
 
 #include "GameFramework/Pawn.h"
 
