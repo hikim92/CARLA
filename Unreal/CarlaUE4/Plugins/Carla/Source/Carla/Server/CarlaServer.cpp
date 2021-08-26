@@ -1091,6 +1091,40 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(set_autopilot_goal) << [this](
+      cr::ActorId ActorId,
+      cr::Location Location,
+      double speed) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to apply actor autopilot goal: actor not found");
+    }
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor autopilot goal: actor is not a vehicle");
+    }
+    else
+    {
+		 Vehicle->ActivateAutopilotComponent(true);
+		 Vehicle->SetAutopilotGoal(Location, speed);
+         if(speed>-100.0)
+         {
+			Vehicle->ActivateAutopilotComponent(true);
+			Vehicle->SetAutopilotGoal(Location, speed);
+         }
+         else
+         {
+		    Vehicle->ActivateAutopilotComponent(false);
+         }
+    }
+    return R<void>::Success();
+  };
+
+
   BIND_SYNC(set_wheel_steer_direction) << [this](
     cr::ActorId ActorId,
     cr::VehicleWheelLocation WheelLocation,

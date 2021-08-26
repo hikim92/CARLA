@@ -23,6 +23,7 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Vehicle/ViaductAutopilotComponent.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -40,6 +41,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl->Deactivate();
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
+
+  ViaductAutopilot = CreateDefaultSubobject<UViaductAutopilotComponent>("AutopilotComp");
+  AddOwnedComponent(ViaductAutopilot);
 
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 }
@@ -180,6 +184,25 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 // =============================================================================
 // -- Set functions ------------------------------------------------------------
 // =============================================================================
+
+void ACarlaWheeledVehicle::SetControl(const FVehicleControl &Control) {
+	ViaductAutopilot->lastVehicleControl = Control;
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
+{
+	if (InputControl.Priority <= Priority)
+	{
+		InputControl.Control = Control;
+		InputControl.Priority = Priority;
+		//UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ApplyVehicleControl"));
+		ViaductAutopilot->lastVehicleControl = Control;
+		ViaductAutopilot->lastPriority = Priority;
+		ViaductAutopilot->ForceVehicleControl = true;
+	}
+	else if (Priority == EVehicleInputPriority::Null)
+		StopForceVehicleControl();
+}
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
@@ -582,4 +605,32 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   ShowDebugTelemetry(false);
+}
+
+void ACarlaWheeledVehicle::ComputeAutoPilot()
+{
+	FVehicleControl autoctrl = ViaductAutopilot->ComputeVehicleControl();
+    ApplyVehicleControl(autoctrl, EVehicleInputPriority::Autopilot );
+
+    FlushVehicleControl();
+}
+
+void ACarlaWheeledVehicle::ComputeFakeAutoPilot()
+{
+	FVehicleControl autoctrl = ViaductAutopilot->ComputeFakeVehicleControl();
+	ApplyVehicleControl(autoctrl, EVehicleInputPriority::Autopilot);
+
+	FlushVehicleControl();
+}
+
+void ACarlaWheeledVehicle::SetAutopilotGoal(const FVector& location, float speed)
+{
+	if (ViaductAutopilot != nullptr)
+		ViaductAutopilot->SetAutopilotGoal(location, speed);
+}
+
+void ACarlaWheeledVehicle::ActivateAutopilotComponent(bool bActivate)
+{
+	if (ViaductAutopilot != nullptr)
+		ViaductAutopilot->ActivateAutopilot(bActivate);
 }

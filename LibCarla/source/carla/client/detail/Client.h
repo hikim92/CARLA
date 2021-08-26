@@ -141,6 +141,11 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehiclePhysicsControl &physics_control);
 
+    void ApplyAutopilotGoalToVehicle(
+        rpc::ActorId vehicle,
+        const geom::Location &location,
+        double speed);
+
     void SetLightStateToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleLightState &light_state);

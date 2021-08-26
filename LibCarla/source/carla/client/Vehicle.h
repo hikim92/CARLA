@@ -50,6 +50,9 @@ namespace client {
     /// Apply physics control to this vehicle.
     void ApplyPhysicsControl(const PhysicsControl &physics_control);
 
+    /// Set the goal location and speed for the server-side autopilot
+    void SetAutopilotGoal(const geom::Location &location, double speed = 0.0);
+
     /// Sets a @a LightState to this vehicle.
     void SetLightState(const LightState &light_state);
 

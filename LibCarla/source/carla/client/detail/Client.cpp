@@ -268,6 +268,13 @@ namespace detail {
     return _pimpl->AsyncCall("apply_physics_control", vehicle, physics_control);
   }
 
+  void Client::ApplyAutopilotGoalToVehicle(  
+      rpc::ActorId vehicle,   
+      const geom::Location &location, 
+      double speed) {
+    return _pimpl->AsyncCall("set_autopilot_goal", vehicle, location, speed);
+ }
+
   void Client::SetLightStateToVehicle(
       rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {

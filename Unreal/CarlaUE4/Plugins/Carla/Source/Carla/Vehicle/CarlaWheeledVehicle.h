@@ -29,6 +29,7 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
+class UViaductAutopilotComponent;
 
 UENUM()
 enum class EVehicleWheelLocation : uint8 {
@@ -111,6 +112,12 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+	  UViaductAutopilotComponent *GetAutopilotComponent() const
+  {
+	  return ViaductAutopilot;
+  }
+
   /// @}
   // ===========================================================================
   /// @name AI debug state
@@ -129,6 +136,12 @@ public:
   {
     return State;
   }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ComputeAutoPilot();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ComputeFakeAutoPilot();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
@@ -221,6 +234,13 @@ public:
   {
     SetHandbrakeInput(false);
   }
+
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void ActivateAutopilotComponent(bool bActivate);
+
+  /// Set the next goal destination in front of this vehicle
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void SetAutopilotGoal(const FVector& location, float speed);
 
   TArray<float> GetWheelsFrictionScale();
 

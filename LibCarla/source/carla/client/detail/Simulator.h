@@ -475,6 +475,10 @@ namespace detail {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
 
+    void ApplyAutopilotGoalToVehicle(Vehicle &vehicle, const geom::Location &location, double speed) {
+     _client.ApplyAutopilotGoalToVehicle(vehicle.GetId(), location, speed);
+    }
+
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
       _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
     }
