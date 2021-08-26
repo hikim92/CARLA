@@ -19,6 +19,7 @@
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
+#include "carla/sensor/s11n/ImageCompressSerializer.h"
 #include "carla/sensor/s11n/OpticalFlowImageSerializer.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
@@ -44,6 +45,8 @@ class ASemanticSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
 
+#define USE_IMAGE_COMPRESSION
+
 namespace carla {
 namespace sensor {
 
@@ -67,7 +70,11 @@ namespace sensor {
     std::pair<ARayCastSemanticLidar *, s11n::SemanticLidarSerializer>,
     std::pair<ARayCastLidar *, s11n::LidarSerializer>,
     std::pair<ARssSensor *, s11n::NoopSerializer>,
+#ifdef USE_IMAGE_COMPRESSION
+    std::pair<ASceneCaptureCamera *, s11n::ImageCompressSerializer>,
+#else
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
+#endif
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>
   >;

@@ -9,6 +9,7 @@
 #include "carla/Debug.h"
 #include "carla/sensor/data/Array.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
+#include "carla/sensor/s11n/ImageCompressSerializer.h"
 #include "carla/sensor/s11n/OpticalFlowImageSerializer.h"
 
 namespace carla {
@@ -22,9 +23,11 @@ namespace data {
   protected:
 
     using Serializer = s11n::ImageSerializer;
+    using CompressSerializer = s11n::ImageCompressSerializer;
     using SerializerOpticalFlow = s11n::OpticalFlowImageSerializer;
 
     friend Serializer;
+    friend CompressSerializer;
     friend SerializerOpticalFlow;
 
     explicit ImageTmpl(RawData &&data)

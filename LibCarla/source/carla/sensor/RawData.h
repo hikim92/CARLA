@@ -84,12 +84,12 @@ namespace sensor {
       return static_cast<size_t>(std::distance(begin(), end()));
     }
 
+    RawData(Buffer &&buff) : _buffer(std::move(buff)) {}  // UGLY: made the constructor public
+
   private:
 
     template <typename... Items>
     friend class CompositeSerializer;
-
-    RawData(Buffer &&buffer) : _buffer(std::move(buffer)) {}
 
     Buffer _buffer;
   };
