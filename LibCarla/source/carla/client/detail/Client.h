@@ -282,6 +282,12 @@ namespace detail {
         rpc::ActorId traffic_light,
         bool freeze);
 
+    void SetHUDInfo(
+        uint32_t flags,
+        int32_t value1,
+        int32_t value2,
+        int32_t value3);
+
     void ResetTrafficLightGroup(
         rpc::ActorId traffic_light);
 

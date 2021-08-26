@@ -579,6 +579,10 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  void Client::SetHUDInfo(uint32_t flags, int32_t value1, int32_t value2, int32_t value3) {
+    _pimpl->AsyncCall("set_hud_info", flags, value1, value2, value3);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla

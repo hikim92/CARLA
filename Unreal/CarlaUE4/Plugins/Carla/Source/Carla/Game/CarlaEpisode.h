@@ -72,6 +72,12 @@ public:
   }
 
   UFUNCTION(BlueprintCallable)
+  const FHUDValues &GetHUDValues() const
+  {
+    return HUDValues;
+  }
+
+  UFUNCTION(BlueprintCallable)
   void ApplySettings(const FEpisodeSettings &Settings);
 
   // ===========================================================================
@@ -283,6 +289,14 @@ public:
     return Recorder->GetReplayer();
   }
 
+  void SetHUDInfo( const uint32_t flags, const int32_t value1, const int32_t value2, const int32_t value3)
+  {
+    HUDValues.flags = flags;
+    HUDValues.value1 = value1;
+    HUDValues.value2 = value2;
+    HUDValues.value3 = value3;
+  }
+
   std::string StartRecorder(std::string name, bool AdditionalData);
 
   FIntVector GetCurrentMapOrigin() const { return CurrentMapOrigin; }
@@ -334,6 +348,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  FHUDValues HUDValues;
 
   ACarlaRecorder *Recorder = nullptr;
 

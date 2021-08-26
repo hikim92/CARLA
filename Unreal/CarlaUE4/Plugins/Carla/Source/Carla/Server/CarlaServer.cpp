@@ -445,6 +445,15 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SerializeActor(CarlaActor);
   };
 
+  BIND_SYNC(set_hud_info) << [this](
+      const uint32_t flags, const int32_t value1, const int32_t value2, const int32_t value3) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->SetHUDInfo(flags, value1, value2, value3);
+    UE_LOG(LogCarlaServer, Warning, TEXT("Setting new HUD values"));
+    return R<void>::Success();
+  };
+
   BIND_SYNC(get_all_level_BBs) << [this](uint8 QueriedTag) -> R<std::vector<cg::BoundingBox>>
   {
     REQUIRE_CARLA_EPISODE();
