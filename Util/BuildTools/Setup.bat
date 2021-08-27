@@ -116,6 +116,25 @@ if not defined install_libpng (
 )
 
 rem ============================================================================
+rem -- Download and install libjpeg ---------------------------------------------
+rem ============================================================================
+
+echo %FILE_N% Installing libjpeg...
+call "%INSTALLERS_DIR%install_libjpeg.bat"^
+ --build-dir "%INSTALLATION_DIR%"^
+ --zlib-install-dir "%INSTALLERS_DIR%"
+
+if %errorlevel% neq 0 goto failed
+
+if not defined install_libjpeg (
+    echo %FILE_N% Failed while installing libjpeg.
+    goto failed
+) else (
+    set LIBJPEG_INSTALL_DIR=%install_libjpeg%
+)
+
+
+rem ============================================================================
 rem -- Download and install rpclib ---------------------------------------------
 rem ============================================================================
 
@@ -279,6 +298,9 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo set(RPCLIB_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/include")
 >>"%CMAKE_CONFIG_FILE%" echo set(RPCLIB_LIB_PATH "%CMAKE_INSTALLATION_DIR%rpclib-install/lib")
+>>"%CMAKE_CONFIG_FILE%" echo.
+>>"%CMAKE_CONFIG_FILE%" echo set(LIBJPEG_INCLUDE_PATH  "%LIBJPEG_INSTALL_DIR:\=/%/include")
+>>"%CMAKE_CONFIG_FILE%" echo set(LIBJPEG_LIB_PATH  "%LIBJPEG_INSTALL_DIR:\=/%/lib")
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo if (CMAKE_BUILD_TYPE STREQUAL "Server")
 >>"%CMAKE_CONFIG_FILE%" echo   # Prevent exceptions

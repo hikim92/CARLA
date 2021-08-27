@@ -76,6 +76,11 @@ if(WIN32)
       "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib"
       "${BOOST_LIB_PATH}/libboost_filesystem-*-mt-*.lib")
   install(FILES ${boostlibs} DESTINATION lib)
+
+  # Install jpeg
+  install(DIRECTORY "${LIBJPEG_INCLUDE_PATH}/" DESTINATION include)
+  file(GLOB libcarla_carla_jpeglib "${LIBJPEG_LIB_PATH}/*.*")
+  install(FILES ${libcarla_carla_jpeglib} DESTINATION lib)
 endif()
 
 # carla_server library.
