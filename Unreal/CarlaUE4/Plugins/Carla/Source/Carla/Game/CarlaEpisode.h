@@ -260,6 +260,24 @@ public:
     ActorDispatcher->WakeActorUp(ActorId, this);
   }
 
+  /// Find a Carla actor by id.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FCarlaActor* FindActor(FCarlaActor::IdType ActorId) const
+  {
+      return ActorDispatcher->GetActorRegistry().FindCarlaActor(ActorId);
+  }
+
+  /// Find the actor view of @a Actor.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FCarlaActor* FindActor(AActor* Actor) const
+  {
+      return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
+  }
+
   // ===========================================================================
   // -- Other methods ----------------------------------------------------------
   // ===========================================================================

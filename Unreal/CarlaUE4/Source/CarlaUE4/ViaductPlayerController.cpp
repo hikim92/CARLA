@@ -305,10 +305,11 @@ void AViaductPlayerController::BeginPlay()
 
 void AViaductPlayerController::StretchWindow()
 {
+	return;
 #if PLATFORM_LINUX
     return;
 #endif
-	int32 stretch_Left = 0;
+	/*int32 stretch_Left = 0;
 	int32 stretch_Top = 0;
 
 	int32 stretch_Width = 0;
@@ -362,5 +363,5 @@ void AViaductPlayerController::StretchWindow()
 			FSystemResolution::RequestResolutionChange(newSize.X, newSize.Y, EWindowMode::Windowed);
 
 		}
-	}
+	}*/
 }

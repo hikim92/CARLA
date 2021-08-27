@@ -170,6 +170,7 @@ public class Carla : ModuleRules
     {
       AddBoostLibs(Path.Combine(LibCarlaInstallPath, "lib"));
       PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("rpc")));
+	  PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("jpeg")));
 
       if (UseDebugLibs(Target))
       {

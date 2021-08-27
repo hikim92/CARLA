@@ -204,6 +204,11 @@ void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &Control, E
 		StopForceVehicleControl();
 }
 
+void ACarlaWheeledVehicle::StopForceVehicleControl()
+{
+	ViaductAutopilot->ForceVehicleControl = false;
+}
+
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
   BaseMovementComponent->ProcessControl(InputControl.Control);

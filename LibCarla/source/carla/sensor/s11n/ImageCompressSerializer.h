@@ -70,7 +70,7 @@ namespace s11n {
     unsigned char* outputBuffer = compressedBuffer.data() + header_offset;
     unsigned int width = sensor.GetImageWidth();
     unsigned int height = sensor.GetImageHeight();
-    size_t jpeg_size = DEFAULT_JPEG_BUFFER_SIZE - header_offset;
+    unsigned long jpeg_size = DEFAULT_JPEG_BUFFER_SIZE - header_offset;
     ImageCompressSerializer::compress(inputData, width, height, outputBuffer, &jpeg_size, DEFAULT_JPEG_QUALITY);
     CompressedImageHeader header = {
       sensor.GetImageWidth(),

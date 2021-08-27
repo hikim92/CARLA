@@ -18,6 +18,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -1097,12 +1098,12 @@ void FCarlaServer::FPimpl::BindActions()
       double speed) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    auto ActorView = Episode->FindActor(ActorId);
-    if (!ActorView.IsValid())
+    FCarlaActor * ActorView = Episode->FindActor(ActorId);
+    if (ActorView == nullptr)
     {
       RESPOND_ERROR("unable to apply actor autopilot goal: actor not found");
     }
-    auto Vehicle = Cast<ACarlaWheeledVehicle>(ActorView.GetActor());
+    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(ActorView->GetActor());
     if (Vehicle == nullptr)
     {
       RESPOND_ERROR("unable to apply actor autopilot goal: actor is not a vehicle");
