@@ -17,6 +17,7 @@
 #include "WheeledVehicleMovementComponent4W.h"
 #include "VehicleAnimInstance.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
+#include "Vehicle/ViaductAutopilotComponent.h"
 
 #include "CoreMinimal.h"
 
@@ -112,6 +113,7 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
 	  UViaductAutopilotComponent *GetAutopilotComponent() const
   {
@@ -174,14 +176,10 @@ public:
 public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
-  {
-    if (InputControl.Priority <= Priority)
-    {
-      InputControl.Control = Control;
-      InputControl.Priority = Priority;
-    }
-  }
+  void ApplyVehicleControl(const FVehicleControl& Control, EVehicleInputPriority Priority);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetControl(const FVehicleControl& Control);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ActivateVelocityControl(const FVector &Velocity);
@@ -194,6 +192,9 @@ public:
 
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void StopForceVehicleControl();
 
   /// @}
   // ===========================================================================
@@ -272,6 +273,8 @@ protected:
   void AdjustVehicleBounds();
 
 private:
+
+  UViaductAutopilotComponent* ViaductAutopilot;
 
   /// Current state of the vehicle controller (for debugging purposes).
   UPROPERTY(Category = "AI Controller", VisibleAnywhere)
