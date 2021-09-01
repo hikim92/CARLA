@@ -44,6 +44,8 @@ public class DirectInputFFB : ModuleRules
 			new string[]
 			{
 				"Core",
+				"InputCore",
+				"InputDevice",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

@@ -1,7 +1,6 @@
 #include "DirectInputFFBBPLibrary.h"
 #include "DirectInputFFBResources.h"
 
-
 std::vector<float> UDirectInputFFBBPLibrary::Hist_position;
 std::vector<float> UDirectInputFFBBPLibrary::Hist_goal;
 
@@ -20,7 +19,7 @@ void UDirectInputFFBBPLibrary::SafeReleaseDevice()
 
 	SAFE_RELEASE(g_pDevice);
 	SAFE_RELEASE(g_pDI);
-	UE_LOG(LogTemp, Log, TEXT("DirectInputFFBB : Free device!"));
+	UE_LOG(DirectInputFFBPluginLog, Log, TEXT("Free device!"));
 }
 
 bool UDirectInputFFBBPLibrary::InitDevice()
@@ -31,33 +30,33 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 	HRESULT hr;
 	if (FAILED(hr = DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&g_pDI, NULL)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : DirectInput8Create"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("DirectInput8Create"));
 		return false;
 	}
 	if (FAILED(hr = g_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, UDirectInputFFBBPLibrary::EnumFFDevicesCallback, nullptr,
 		DIEDFL_ATTACHEDONLY | DIEDFL_FORCEFEEDBACK)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : EnumDevices"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("EnumDevices"));
 		return false;
 	}
 	if (!g_pDevice)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : No g_pDevice found !"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("No g_pDevice found !"));
 		return false;
 	}
 	if (FAILED(hr = g_pDevice->SetDataFormat(&c_dfDIJoystick2)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : SetDataFormat, c_dfDIJoystick2"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("SetDataFormat, c_dfDIJoystick2"));
 		return false;
 	}
 	const auto hwnd = GetActiveWindow();
 	if (!hwnd) {
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : GetActiveWindow() is null"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("GetActiveWindow() is null"));
 		return false;
 	}
 	if (FAILED(hr = g_pDevice->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : SetCooperativeLevel, DISCL_EXCLUSIVE"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("SetCooperativeLevel, DISCL_EXCLUSIVE"));
 		return false;
 	}
 
@@ -69,7 +68,7 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 	dipdw.dwData = 0;
 	if (FAILED(hr = g_pDevice->SetProperty(DIPROP_AUTOCENTER, &dipdw.diph)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : SetProperty, DIPROP_AUTOCENTER"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("SetProperty, DIPROP_AUTOCENTER"));
 		return false;
 	}
 	// =========================================================
@@ -94,7 +93,7 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 
 	if (FAILED(hr = g_pDevice->CreateEffect(GUID_Spring, &eff_spring, &g_pEffect_spring, nullptr)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : Init Spring effect"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("Init Spring effect"));
 		return false;
 	}
 	// =========================================================
@@ -119,7 +118,7 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 
 	if (FAILED(hr = g_pDevice->CreateEffect(GUID_ConstantForce, &eff_const, &g_pEffect_constforce, nullptr)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : Init ConstantForce effect"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("Init ConstantForce effect"));
 		return false;
 	}
 	// =========================================================
@@ -144,14 +143,14 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 
 	if (FAILED(hr = g_pDevice->CreateEffect(GUID_Sine, &eff_sin, &g_pEffect_sin_wave, nullptr)))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : Init SinWave effect"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("Init SinWave effect"));
 		return false;
 	}
 	// =========================================================
 
 	if (!g_pEffect_spring && !g_pEffect_constforce && !g_pEffect_sin_wave)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : g_pEffect... is null"));
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("g_pEffect... is null"));
 		return false;
 	}
 	return true;
@@ -159,18 +158,8 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 
 float UDirectInputFFBBPLibrary::SteeringWheelPosition(bool inDegree)
 {
-	if (g_pDevice)
-	{
-		DIJOYSTATE2 stateCurrent;
-		HRESULT hr = g_pDevice->GetDeviceState(sizeof(DIJOYSTATE2), &stateCurrent);
-		if (hr == DI_OK)
-		{
-			if (inDegree) return float(((stateCurrent.lX - 32767) / 65536.0f) * STREERINGWHEEL_ANGLE_MAX); // Driver assumes a range of 750°
-			return float((stateCurrent.lX - 32767) / 65536.0f);
-		}
-		UE_LOG(LogTemp, Error, TEXT("Fail DirectInputFFBB : g_pDevice null"));
-	}
-	return 0.f;
+	if (inDegree) return float(currentSteeringWheel * STREERINGWHEEL_ANGLE_MAX); // Driver assumes a range of 750°
+	return currentSteeringWheel;
 }
 
 bool UDirectInputFFBBPLibrary::SetSpringParameters(int offset, int posCoef, int negCoef, int posSat, int negSat, int deadZone)
@@ -203,12 +192,12 @@ bool UDirectInputFFBBPLibrary::SetSpringParameters(int offset, int posCoef, int 
 
 	if (FAILED(hr = g_pDevice->Acquire()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : Acquire SetSpringParameters"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("Acquire SetSpringParameters"));
 		return false;
 	}
 	if (FAILED(hr = g_pEffect_spring->SetParameters(&eff, DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS | DIEP_START)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : SetSpringParameters"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("SetSpringParameters"));
 		g_pDevice->Unacquire();
 		return false;
 	}
@@ -242,12 +231,12 @@ bool UDirectInputFFBBPLibrary::SetSinWaveParameters(int offset, int magnitude, i
 
 	if (FAILED(hr = g_pDevice->Acquire()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : Acquire SetSinWaveParameters"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("Acquire SetSinWaveParameters"));
 		return false;
 	}
 	if (FAILED(hr = g_pEffect_sin_wave->SetParameters(&eff, DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS | DIEP_START)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : SetSinWaveParameters"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("SetSinWaveParameters"));
 		g_pDevice->Unacquire();
 		return false;
 	}
@@ -276,12 +265,12 @@ bool UDirectInputFFBBPLibrary::SetConstantForceParameters(int force)
 
 	if (FAILED(hr = g_pDevice->Acquire()))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : Acquire g_pEffectConstforce"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("Acquire g_pEffectConstforce"));
 		return false;
 	}
 	if (FAILED(hr = g_pEffect_constforce->SetParameters(&eff, DIEP_TYPESPECIFICPARAMS | DIEP_START)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Fail DirectInputFFBB : SetParameters g_pEffectConstforce"));
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("SetParameters g_pEffectConstforce"));
 		g_pDevice->Unacquire();
 		return false;
 	}
@@ -307,7 +296,7 @@ bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, boo
 	UDirectInputFFBBPLibrary::Hist_goal.push_back(goal);
 
 	torque = kp * error + ki * integral + kd * differential;
-	UE_LOG(LogTemp, Warning, TEXT("LOG PID : %f,%f,%f,%d,%d,%d"), deltaTime, position, goal, torque, UDirectInputFFBBPLibrary::Hist_position.size(), UDirectInputFFBBPLibrary::Hist_goal.size());
+	UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("LOG PID : %f,%f,%f,%d,%d,%d"), deltaTime, position, goal, torque, UDirectInputFFBBPLibrary::Hist_position.size(), UDirectInputFFBBPLibrary::Hist_goal.size());
 
 	bool retValue = UDirectInputFFBBPLibrary::SetConstantForceParameters(torque);
 
@@ -335,6 +324,10 @@ bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, boo
 		if (last_how_suspicious && (current_conseq_how > max_conseq_how)) max_conseq_how = current_conseq_how;
 		current_conseq_how = 0;
 		last_how_suspicious = false;
+	}
+
+	if (currentAccelerator > 0.02f) {
+		last_how_suspicious = true;
 	}
 
 	if (UDirectInputFFBBPLibrary::Hist_position.size() > SIZE_HIST_PID+1) {
