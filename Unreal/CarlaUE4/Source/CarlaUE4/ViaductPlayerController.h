@@ -6,7 +6,9 @@
 #include "Vehicle/VehicleControl.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "GameFramework/PlayerController.h"
+#include "Carla/Settings/HUDValues.h"
 #include "ViaductPlayerController.generated.h"
+
 
 class UWheeledVehicleMovementComponent4W;
 class ACarlaWheeledVehicle;
@@ -16,20 +18,21 @@ class UAudioComponent;
 #define PEDAL_MIDDLE   0.5f
 #define PEDAL_PUSHED   1.0f
 
+
 #if !defined(M_PI)
-  #define M_PI 3.141592f
+ #define M_PI 3.14159265358979323846f
 #endif  
-#define RMAX ((450.0 * M_PI) / 180.0) // Max input in radians
+#define RMAX ((450.0f * M_PI) / 180.0f) // Max input in radians
 
-#define STEERING_RATIO   45     // Steering wheel ratio  1:15 -> 1:50
-#define MAX_WHEELS_ANGLE (0.7)  // Max angle of the car wheels in radians (audi TT=0.7)
+#define STEERING_RATIO   45.f     // Steering wheel ratio  1:15 -> 1:50
+#define MAX_WHEELS_ANGLE 0.7f  // Max angle of the car wheels in radians (audi TT=0.7)
 
-#define BRAKE_GAIN       0.7
+#define BRAKE_GAIN       0.7f
 
-#define FF_STRENGTH       30  // Default force feedback
-#define FF_STRENGTH_MIN   25  // Weakest force feedback, for [0-50] km/h
-#define FF_STRENGTH_MAX   50  // Strongest force feedback, for [100,...] km/h  => speed / 2
-#define FF_MIN_DIFFERENCE  2  // Minimal difference to actually change the force feedback of the G29
+#define PEDAL_R					((PEDAL_RELEASED - PEDAL_PUSHED) * (PEDAL_RELEASED - PEDAL_PUSHED))
+#define PEDAL_A					( -0.5f / ((PEDAL_RELEASED - PEDAL_MIDDLE)* abs(PEDAL_RELEASED - PEDAL_MIDDLE)))
+#define STEERING_RATIO_COMPUTED ((RMAX * RMAX * RMAX / STEERING_RATIO) / (MAX_WHEELS_ANGLE - RMAX / STEERING_RATIO))
+#define STEERING_FINAL          (STEERING_RATIO_COMPUTED * STEERING_RATIO)
 
 /**
  * 
@@ -49,12 +52,6 @@ public:
 	void Tick(float DeltaTime) override;
 
 	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
-	void InitWheelController();
-
-	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
-	void StopWheelController();
-	
-	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
 	bool IsPossessingAVehicle() const
 	{
 		return Vehicle != nullptr;
@@ -65,30 +62,7 @@ public:
 	{
 		return Vehicle;
 	}
-
-	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
-	bool GetHandsOnWheel()
-	{
-		if (HandsOnWheel) {
-			HandsOnWheel = false;
-			return true;
-		}
-		return HandsOnWheel;  // Always false
-	}
 	
-	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
-	float GetInstructionWheel()
-	{
-		return InstructionWheel;
-	}
-
-	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
-	void SetInstructionWheel(float value)
-	{
-		InstructionWheel = FMath::Clamp(value, -1.0f, 1.0f);
-	}
-
-
 	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
 	void SetStickyControl(bool bEnabled)
 	{
@@ -101,17 +75,95 @@ public:
 		ManualControl.bReverse = bNewReverse;
 	}	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Viaduct PC")
-	bool LKAisOn;
-
 	UPROPERTY(VisibleAnywhere, Category = "Viaduct PC")
 	bool bControlIsSticky = false;
 
-	UPROPERTY(VisibleAnywhere, Category = "Viaduct PC")
-	bool bSemiManualControl = true;
+	/*
+	HUDValues.flags : 
+	
+	HUD_MIRROR_W_LEFT = & 2;
+	HUD_MIRROR_W_RIGHT = & 4;
+	HUD_FCW = & 8;
+	HUD_AEB = & 16;
+
+	HUD_LDW = & 32;
+	HUD_ACC = & 64;
+	HUD_LKA = & 128;
+	HUD_ACC_DISABLE = & 256;
+
+	HUD_LKA_DISABLE = & 512;
+	HUD_TURN_LEFT =   & 1024;
+	HUD_TURN_RIGHT =  & 2048;
 
 
-    int iLastForceFeedback = -1;
+	...
+	*/
+	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
+	void SetHUDValues(FHUDValues newHudValues);
+
+	// HUD - Autopilote
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_MIRROR_W_LEFT = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_MIRROR_W_RIGHT = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_FCW = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_AEB = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_LDW = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_LKA = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Viaduct PC")
+	bool CLEAN_PID = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_LKA_DISABLE = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_ACC = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_ACC_DISABLE = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_TURN_LEFT = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	bool HUD_TURN_RIGHT = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	int HUD_SPEED_LIMIT = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	int HUD_ACC_SPEED = 0;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Viaduct PC")
+	bool HUD_BLINKER_LEFT = false;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Viaduct PC")
+	bool HUD_BLINKER_RIGHT = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	UAudioComponent* SOUND_FCW = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	UAudioComponent* SOUND_AEB = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	UAudioComponent* SOUND_LDW = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	UAudioComponent* SOUND_BLINKER = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+	UAudioComponent* SOUND_AUTOPILOT_OFF = nullptr;
 
 protected:
 	/** Called for side to side input */
@@ -119,21 +171,11 @@ protected:
 	void MoveRight(float Val);
 	void Brake(float Val);
 
-	float CheckReverse(float Val);
-	float AdjustSteerSensibility(float Val);
-	float AdjustThrottle(float Val);
-	float AdjustBrake(float Val);
-
-    void AdaptForceFeedback(float speed);
-
 	void UseHandbrake();
 	void StopHandbrake();	
-	void PlaySpringForce();		
 
 	virtual void BeginPlay() override;
 	void StretchWindow();
-
-	float InstructionLevel = 0.0f;
 
 	/** handle of active TryToAddSpringForce timer  */
 	UPROPERTY()
@@ -143,13 +185,13 @@ protected:
 	FVehicleControl ManualControl;	
 
 	UPROPERTY()
-	USoundCue* AudioCue;
-
-	UPROPERTY()
-	UAudioComponent* AudioComponent = nullptr;
+	UAudioComponent* SoundOutsideAmbi = nullptr;
 
 	UPROPERTY(VisibleAnywhere)
 	ACarlaWheeledVehicle* Vehicle = nullptr;
+
+	UPROPERTY()
+	FHUDValues HUDValues;
 
 	UPROPERTY(VisibleAnywhere)
 	float MaximumSteerAngle = -1.0f;
@@ -158,23 +200,12 @@ protected:
 	float CacheForwardSpeed = 0.0f;
 
 	UPROPERTY(VisibleAnywhere)
-	bool UseArcadeMode = true;
-
-	UPROPERTY(VisibleAnywhere)
 	bool AdjustSteering = true;
 
-	UPROPERTY(EditAnywhere)
-	bool HandsOnWheel = false;
+private:
+	float AdjustSteerSensibility(float Val);
+	float AdjustThrottle(float Val);
+	float AdjustBrake(float Val);
 
-	UPROPERTY(VisibleAnywhere)
-	float KFlat = 1.0f;
-
-	UPROPERTY(VisibleAnywhere)
-	float KScale = 3.0f;
-
-	UPROPERTY(EditAnywhere)
-	float InstructionWheel = 0.0f;  // -1.0, 1.0
-
-	UPROPERTY(BlueprintReadOnly)
-	float DirectInputWheel = 0.0f;  // -1.0, 1.0
+	void PlaySoundHMI(UAudioComponent* audioC, bool play = false);
 };
