@@ -70,10 +70,12 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     FinalPath = FPaths::ProjectContentDir() + FinalPath;
     FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
 
-    if (FPaths::FileExists(FinalPath)) {
+    bIsFileFound = true; // In Package project, UE fail to check if map exist...
+    FinalPath = MapString;
+    /*if (FPaths::FileExists(FinalPath)) {
       bIsFileFound = true;
       FinalPath = MapString;
-    }
+    }*/
   }
   else
   {
