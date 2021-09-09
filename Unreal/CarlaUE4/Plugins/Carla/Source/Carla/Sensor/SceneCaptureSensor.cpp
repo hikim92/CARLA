@@ -485,6 +485,8 @@ void ASceneCaptureSensor::BeginPlay()
 
   CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 
+  CaptureComponent2D->CaptureSortPriority = 0;
+  CaptureComponent2D->MaxViewDistanceOverride = 18000.0;
   CaptureComponent2D->UpdateContent();
   CaptureComponent2D->Activate();
 
