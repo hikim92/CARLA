@@ -101,6 +101,9 @@ public:
 	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
 	void SetHUDValues(FHUDValues newHudValues);
 
+	UFUNCTION(Category = "Viaduct PC", BlueprintCallable)
+	void SetHandsOnWheelDetected();
+
 	// HUD - Autopilote
 	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
 	bool HUD_MIRROR_W_LEFT = false;
@@ -122,6 +125,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Viaduct PC")
 	bool CLEAN_PID = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
+    bool ENABLE_HOW = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Viaduct PC")
 	bool HUD_LKA_DISABLE = false;

@@ -107,15 +107,13 @@ float AViaductPlayerController::AdjustSteerSensibility(float Value)
 		float r = (Value * 450.0 * M_PI) / 180.0; // Current input converted to radians		
         return (float)(r * r * r + STEERING_RATIO_COMPUTED * r) / STEERING_FINAL;
     }
-    else
-        return Value;
+    return Value;
 }
 
 float AViaductPlayerController::AdjustThrottle(float Val)
 {
 	// full release => 0.0, center value => 0.5, full pushed  => 1.0
-	float y = PEDAL_A * (Val - PEDAL_MIDDLE) * abs(Val - PEDAL_MIDDLE) + 0.5f;
-	return y;
+	return (float)PEDAL_A * (Val - PEDAL_MIDDLE) * abs(Val - PEDAL_MIDDLE) + 0.5f;
 }
 
 float AViaductPlayerController::AdjustBrake(float input)
@@ -215,9 +213,7 @@ void AViaductPlayerController::Tick(const float DeltaTime)
 	//UE_LOG(LogTemp, Warning, TEXT("Autopilot"));
 	
 	//UE_LOG(LogTemp, Warning, TEXT("Current Speed : %f"), CacheForwardSpeed * 0.036f);
-	SoundOutsideAmbi->SetFloatParameter("SPEED_KMH", CacheForwardSpeed * 0.036f);
-
-	
+	SoundOutsideAmbi->SetFloatParameter("SPEED_KMH", CacheForwardSpeed * 0.036f);	
 }
 
 void AViaductPlayerController::BeginPlay()
@@ -251,6 +247,7 @@ void AViaductPlayerController::SetHUDValues(FHUDValues newHudValues)
 		}
 	}
 	HUD_LKA = HUDValues.flags & 128;
+	if(HUD_LKA){ ENABLE_HOW = true; }
 
 	HUD_ACC_DISABLE = HUDValues.flags & 256;
 	HUD_LKA_DISABLE = HUDValues.flags & 512;
@@ -272,6 +269,15 @@ void AViaductPlayerController::SetHUDValues(FHUDValues newHudValues)
 	PlaySoundHMI(SOUND_BLINKER, HUD_BLINKER_RIGHT);
 }
 
+void AViaductPlayerController::SetHandsOnWheelDetected()
+{
+	if (HUD_LKA) {
+		CLEAN_PID = true;
+		ENABLE_HOW = false;
+		PlaySoundHMI(SOUND_AUTOPILOT_OFF, true);
+	}
+}
+
 void AViaductPlayerController::PlaySoundHMI(UAudioComponent* audioC, bool play)
 {
 	if (play && !audioC->IsPlaying()) { audioC->Play(); }
@@ -279,68 +285,7 @@ void AViaductPlayerController::PlaySoundHMI(UAudioComponent* audioC, bool play)
 
 void AViaductPlayerController::StretchWindow()
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Monitor InfoRequestResolutionChange"));
-	//FSystemResolution::RequestResolutionChange(1900, 720, EWindowMode::Windowed);
-	GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 100"));
+	UE_LOG(LogTemp, Warning, TEXT("Monitor StretchWindow"));
+	GEngine->Exec(GetWorld(), TEXT("r.ScreenPercentage 80"));
 	GEngine->Exec(GetWorld(), TEXT("r.setres 5760x1080")); // r.ScreenPercentage 100
-	return;
-#if PLATFORM_LINUX
-    return;
-#endif
-	/*int32 stretch_Left = 0;
-	int32 stretch_Top = 0;
-
-	int32 stretch_Width = 0;
-	int32 stretch_Height = 0;
-
-	FDisplayMetrics DisplayMetrics;
-	FDisplayMetrics::GetDisplayMetrics(DisplayMetrics);
-
-	// Start monitor on the main screen
-	for (int32 Index = 0; Index < DisplayMetrics.MonitorInfo.Num(); Index++)
-	{
-		const FMonitorInfo Monitor = DisplayMetrics.MonitorInfo[Index];
-
-		if (Monitor.WorkArea.Left < stretch_Left)
-			stretch_Left = Monitor.DisplayRect.Left;
-
-		if (Monitor.WorkArea.Top < stretch_Top)
-			stretch_Top = Monitor.WorkArea.Top;
-
-		int32 monitorWidth = Monitor.WorkArea.Right - Monitor.WorkArea.Left;
-		int32 monitorHeight = Monitor.WorkArea.Bottom - Monitor.WorkArea.Top;
-
-		stretch_Width += monitorWidth;
-
-		if (monitorHeight > stretch_Height)
-			stretch_Height = monitorHeight;
-
-		UE_LOG(LogTemp, Warning, TEXT("Monitor Info (%d) : %d x %d at %d ; %d"), Index, monitorWidth, monitorHeight, Monitor.WorkArea.Left, Monitor.WorkArea.Top);
-	}
-#if PLATFORM_LINUX
-    stretch_Width  = 5693;
-    stretch_Height = 1024;
-#else
-	stretch_Width = 5760;
-	stretch_Height = 1080;
-#endif
-	UE_LOG(LogTemp, Warning, TEXT("Total Screen Size : %d x %d"), stretch_Width, stretch_Height);
-
-	const FVector2D newPosition(static_cast<float>(stretch_Left), static_cast<float>(stretch_Top));
-	const FVector2D newSize(static_cast<float>(stretch_Width), static_cast<float>(stretch_Height));
-	
-	UE_LOG(LogTemp, Warning, TEXT("Screen Start : %d x %d"), stretch_Left, stretch_Top);
-
-	EWorldType::Type eType = GetWorld()->WorldType;
-
-	if (eType == EWorldType::Game)
-	{
-		if (GEngine)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Reshaping : %f x %f at %f ; %f"), newSize.X, newSize.Y, newPosition.X, newPosition.Y);
-			FSystemResolution::RequestResolutionChange(newSize.X, newSize.Y, EWindowMode::Windowed);
-
-		}
-	}*/
 }
