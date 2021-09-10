@@ -326,7 +326,7 @@ bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, boo
 		last_how_suspicious = false;
 	}
 
-	if (currentAccelerator > 0.02f) {
+	if (currentBrake > 0.02f) {
 		last_how_suspicious = true;
 	}
 
