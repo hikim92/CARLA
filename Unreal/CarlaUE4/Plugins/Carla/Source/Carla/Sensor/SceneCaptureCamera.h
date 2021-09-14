@@ -28,4 +28,5 @@ protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  bool oneTickOf2 = true;
 };
