@@ -324,6 +324,9 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     ATrafficSignBase *Actor = *It;
     check(Actor != nullptr);
     FActorDescription Description;
+    Actor->SetActorHiddenInGame(true);     // Hide SpeedLimit for Viaduct
+    Actor->SetActorTickEnabled(false);     //
+    Actor->SetActorEnableCollision(false); //
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
