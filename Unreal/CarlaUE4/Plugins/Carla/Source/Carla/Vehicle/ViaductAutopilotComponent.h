@@ -39,20 +39,10 @@ public:
 
 	/// Set the next goal destination in front of this vehicle
 	UFUNCTION(Category = "Viaduct Autopilot Component", BlueprintCallable)
-	void SetAutopilotGoal(const FVector& location, float speed)
-	{
-		GoalLocation = location;
-		GoalSpeed = speed;
-	}
+	void SetAutopilotGoal(const FVector& location, float speed);
 
 	UPROPERTY()
 	UWheeledVehicleMovementComponent4W* MovementComponent = nullptr;
-
-	UPROPERTY()
-	FVector GoalLocation;
-
-	UPROPERTY()
-	float GoalSpeed = 0.0;
 
 	UPROPERTY()
 	bool ForceVehicleControl = false;
@@ -62,4 +52,8 @@ public:
 
 	UPROPERTY()
 	EVehicleInputPriority lastPriority;
+
+private:
+	FVector goalLocation;
+	float goalSpeed = 0.0;
 };

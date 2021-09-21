@@ -1112,15 +1112,6 @@ void FCarlaServer::FPimpl::BindActions()
     {
 		 Vehicle->ActivateAutopilotComponent(true);
 		 Vehicle->SetAutopilotGoal(Location, speed);
-         if(speed>-100.0)
-         {
-			Vehicle->ActivateAutopilotComponent(true);
-			Vehicle->SetAutopilotGoal(Location, speed);
-         }
-         else
-         {
-		    Vehicle->ActivateAutopilotComponent(false);
-         }
     }
     return R<void>::Success();
   };

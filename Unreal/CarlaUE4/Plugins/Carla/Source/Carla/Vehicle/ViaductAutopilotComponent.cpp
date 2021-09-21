@@ -41,6 +41,13 @@ void UViaductAutopilotComponent::TryToGetMovementComponent()
 		MovementComponent = Cast<UWheeledVehicleMovementComponent4W>(newComp);
 }
 
+void UViaductAutopilotComponent::SetAutopilotGoal(const FVector& location, float speed)
+{
+	goalLocation = location;
+	goalSpeed = speed;
+}
+
+
 void UViaductAutopilotComponent::ActivateAutopilot(bool bActivate)
 {
 	// Call Delegate to set Autopilot on Controller
@@ -61,7 +68,6 @@ FVehicleControl UViaductAutopilotComponent::ComputeVehicleControl()
 #if not PLATFORM_LINUX
 	float M_PI = UKismetMathLibrary::GetPI();
 #endif
-
 	if (MovementComponent != nullptr)
 	{
 		// Legacy
@@ -71,10 +77,10 @@ FVehicleControl UViaductAutopilotComponent::ComputeVehicleControl()
 		autoctrl.Gear = 0;
 
 		// Cruise control
-		if (GoalSpeed > 0.0)
+		if (goalSpeed > 0.0)
 		{
 			float speed = MovementComponent->GetForwardSpeed() / 100.0;  // [cm/s] -> [m/s]
-			float cmd = 0.5 - 0.2 * (speed - GoalSpeed);
+			float cmd = 0.5 - 0.2 * (speed - goalSpeed);
 			if (cmd > 0.7f) cmd = 0.7f;
 			if (cmd < 0.0f) cmd = 0.0f;
 			//UE_LOG(LogTemp, Warning, TEXT("UViaductAutopilotComponent::ComputeVehicleControl - car speed : %f -> %f => %f"), speed, GoalSpeed, cmd);
@@ -83,9 +89,9 @@ FVehicleControl UViaductAutopilotComponent::ComputeVehicleControl()
 		}
 		else
 		{
-			if (GoalSpeed >= -1.0 && GoalSpeed <= 0.0) {   // Emergency braking
+			if (goalSpeed >= -1.0 && goalSpeed <= 0.0) {   // Emergency braking
 				autoctrl.Throttle = 0.0;
-				autoctrl.Brake = 0.7 * abs(GoalSpeed);
+				autoctrl.Brake = 0.7 * abs(goalSpeed);
 			}
 			else {  // Manual mode
 				autoctrl.Throttle = this->lastVehicleControl.Throttle;
@@ -94,14 +100,14 @@ FVehicleControl UViaductAutopilotComponent::ComputeVehicleControl()
 			}
 		}
 
-		if (GoalLocation.X >= 500000000.f && GoalLocation.Y >= 500000000.f) {
+		if (goalLocation.X >= 500000000.f && goalLocation.Y >= 500000000.f) {
 			autoctrl.Steer = this->lastVehicleControl.Steer;;
 		}
 		else {
 			// Direction following (Lane keeping and Lane change)
 			FTransform current_transform = GetOwner()->GetTransform();
-			float dx = GoalLocation.X - current_transform.GetTranslation().X;
-			float dy = GoalLocation.Y - current_transform.GetTranslation().Y;
+			float dx = goalLocation.X - current_transform.GetTranslation().X;
+			float dy = goalLocation.Y - current_transform.GetTranslation().Y;
 			float distance = sqrt(dx*dx + dy * dy);
 			bool manual = true;
 			//UE_LOG(LogTemp, Warning, TEXT("ComputeVehicleControl::distance - %f"), distance);

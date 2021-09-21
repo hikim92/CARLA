@@ -48,7 +48,10 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 }
 
-ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
+ACarlaWheeledVehicle::~ACarlaWheeledVehicle()
+{
+    ViaductAutopilot = nullptr;
+}
 
 void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W,
     const FVehiclePhysicsControl &PhysicsControl ) {
@@ -630,12 +633,14 @@ void ACarlaWheeledVehicle::ComputeFakeAutoPilot()
 
 void ACarlaWheeledVehicle::SetAutopilotGoal(const FVector& location, float speed)
 {
-	if (ViaductAutopilot != nullptr)
-		ViaductAutopilot->SetAutopilotGoal(location, speed);
+    if (ViaductAutopilot != nullptr) {
+        ViaductAutopilot->SetAutopilotGoal(location, speed);
+    }
 }
 
 void ACarlaWheeledVehicle::ActivateAutopilotComponent(bool bActivate)
 {
-	if (ViaductAutopilot != nullptr)
-		ViaductAutopilot->ActivateAutopilot(bActivate);
+    if (ViaductAutopilot != nullptr) {
+        ViaductAutopilot->ActivateAutopilot(bActivate);
+    }
 }

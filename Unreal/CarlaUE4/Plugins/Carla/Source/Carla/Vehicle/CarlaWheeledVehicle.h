@@ -114,8 +114,8 @@ public:
   float GetMaximumSteerAngle() const;
 
 
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-	  UViaductAutopilotComponent *GetAutopilotComponent() const
+  UFUNCTION(Category = "Viaduct", BlueprintCallable)
+  UViaductAutopilotComponent *GetAutopilotComponent() const
   {
 	  return ViaductAutopilot;
   }
@@ -274,6 +274,7 @@ protected:
 
 private:
 
+  UPROPERTY(Category = "Viaduct", VisibleAnywhere)
   UViaductAutopilotComponent* ViaductAutopilot;
 
   /// Current state of the vehicle controller (for debugging purposes).
