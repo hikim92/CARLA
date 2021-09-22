@@ -451,7 +451,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     Episode->SetHUDInfo(flags, value1, value2, value3);
-    UE_LOG(LogCarlaServer, Warning, TEXT("Setting new HUD values"));
+    //UE_LOG(LogCarlaServer, Warning, TEXT("Setting new HUD values"));
     return R<void>::Success();
   };
 

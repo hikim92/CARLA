@@ -624,7 +624,10 @@ namespace SceneCaptureSensor_local_ns {
     if (bPostProcessing)
     {
       ShowFlags.EnableAdvancedFeatures();
-      ShowFlags.SetMotionBlur(true);
+      ShowFlags.SetMotionBlur(false);
+      ShowFlags.SetDynamicShadows(false);
+      ShowFlags.SetBloom(false);
+      ShowFlags.SetLensFlares(false);
       return;
     }
 
