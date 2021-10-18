@@ -44,6 +44,7 @@ LPDIRECTINPUTDEVICE8    g_pDevice = nullptr;
 
 LPDIRECTINPUTEFFECT     g_pEffect_spring = nullptr;
 LPDIRECTINPUTEFFECT     g_pEffect_constforce = nullptr;
+LPDIRECTINPUTEFFECT     g_pEffect_damper = nullptr;
 LPDIRECTINPUTEFFECT     g_pEffect_sin_wave = nullptr;
 
 LONG rglDirectionWheel[2] = { 0, 0 };

@@ -3,6 +3,9 @@
 
 std::vector<float> UDirectInputFFBBPLibrary::Hist_position;
 std::vector<float> UDirectInputFFBBPLibrary::Hist_goal;
+std::vector<LPDIRECTINPUTDEVICE8> UDirectInputFFBBPLibrary::Devices;
+int UDirectInputFFBBPLibrary::currentDevice;
+bool UDirectInputFFBBPLibrary::enableDamper;
 
 UDirectInputFFBBPLibrary::UDirectInputFFBBPLibrary(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -13,32 +16,22 @@ void UDirectInputFFBBPLibrary::SafeReleaseDevice()
 {
 	if (g_pDevice) g_pDevice->Unacquire();
 
-	SAFE_RELEASE(g_pEffect_spring);
-	SAFE_RELEASE(g_pEffect_constforce);
-	SAFE_RELEASE(g_pEffect_sin_wave);
+	SAFE_RELEASE_FFB(g_pEffect_spring);
+	SAFE_RELEASE_FFB(g_pEffect_constforce);
+	SAFE_RELEASE_FFB(g_pEffect_damper);
+	SAFE_RELEASE_FFB(g_pEffect_sin_wave);
 
-	SAFE_RELEASE(g_pDevice);
-	SAFE_RELEASE(g_pDI);
+	SAFE_RELEASE_FFB(g_pDevice);
+	SAFE_RELEASE_FFB(g_pDI);
 	UE_LOG(DirectInputFFBPluginLog, Log, TEXT("Free device!"));
 }
 
-bool UDirectInputFFBBPLibrary::InitDevice()
-{
-	UDirectInputFFBBPLibrary::SafeReleaseDevice();
-
+bool UDirectInputFFBBPLibrary::InitWheel() {
 	// INIT DIRECT INPUT =======================================
 	HRESULT hr;
-	if (FAILED(hr = DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&g_pDI, NULL)))
-	{
-		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("DirectInput8Create"));
-		return false;
-	}
-	if (FAILED(hr = g_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, UDirectInputFFBBPLibrary::EnumFFDevicesCallback, nullptr,
-		DIEDFL_ATTACHEDONLY | DIEDFL_FORCEFEEDBACK)))
-	{
-		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("EnumDevices"));
-		return false;
-	}
+	UDirectInputFFBBPLibrary::enableDamper = true;
+
+	g_pDevice = UDirectInputFFBBPLibrary::Devices.at(UDirectInputFFBBPLibrary::currentDevice);
 	if (!g_pDevice)
 	{
 		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("No g_pDevice found !"));
@@ -59,6 +52,27 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("SetCooperativeLevel, DISCL_EXCLUSIVE"));
 		return false;
 	}
+	return true;
+}
+
+bool UDirectInputFFBBPLibrary::InitDevice()
+{
+	UDirectInputFFBBPLibrary::SafeReleaseDevice();
+	UDirectInputFFBBPLibrary::Devices.clear();
+	UDirectInputFFBBPLibrary::currentDevice = 0;
+
+	HRESULT hr;
+	if (FAILED(hr = DirectInput8Create(GetModuleHandle(nullptr), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&g_pDI, NULL)))
+	{
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("DirectInput8Create"));
+		return false;
+	}
+	if (FAILED(hr = g_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, UDirectInputFFBBPLibrary::EnumFFDevicesCallback, nullptr,
+		DIEDFL_ATTACHEDONLY | DIEDFL_FORCEFEEDBACK)))
+	{
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("EnumDevices"));
+		return false;
+	}
 
 	DIPROPDWORD dipdw;
 	dipdw.diph.dwSize = sizeof(DIPROPDWORD);
@@ -66,10 +80,17 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 	dipdw.diph.dwObj = 0;
 	dipdw.diph.dwHow = DIPH_DEVICE;
 	dipdw.dwData = 0;
-	if (FAILED(hr = g_pDevice->SetProperty(DIPROP_AUTOCENTER, &dipdw.diph)))
-	{
-		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("SetProperty, DIPROP_AUTOCENTER"));
-		return false;
+	bool deviceOk = false;
+	while (!deviceOk) {
+		// Loop on list of device founded & try to set Property
+		if (UDirectInputFFBBPLibrary::currentDevice >= UDirectInputFFBBPLibrary::Devices.size()) {
+			UE_LOG(DirectInputFFBPluginLog, Error, TEXT("No device found !"));
+			return false;
+		}
+		if (UDirectInputFFBBPLibrary::InitWheel()) {
+			deviceOk = !FAILED(hr = g_pDevice->SetProperty(DIPROP_AUTOCENTER, &dipdw.diph));
+		}
+		UDirectInputFFBBPLibrary::currentDevice++;
 	}
 	// =========================================================
 
@@ -123,6 +144,31 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 	}
 	// =========================================================
 
+	// INIT Damper effect ===============================
+	DIEFFECT eff_damper= {};
+	DICONDITION conditionEffectDamper = { 0, 10000, 10000, 10000, 10000, 0 };
+	eff_damper.dwSize = sizeof(DIEFFECT);
+	eff_damper.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+	eff_damper.dwDuration = INFINITE;
+	eff_damper.dwSamplePeriod = 0;
+	eff_damper.dwGain = DI_FFNOMINALMAX;
+	eff_damper.dwTriggerButton = DIEB_NOTRIGGER;
+	eff_damper.dwTriggerRepeatInterval = 0;
+	eff_damper.cAxes = 1;
+	eff_damper.rgdwAxes = rgdwAxesWheel;
+	eff_damper.rglDirection = rglDirectionWheel;
+	eff_damper.lpEnvelope = 0;
+	eff_damper.cbTypeSpecificParams = sizeof(DICONDITION);
+	eff_damper.lpvTypeSpecificParams = &conditionEffectDamper;
+	eff_damper.dwStartDelay = 0;
+
+	if (FAILED(hr = g_pDevice->CreateEffect(GUID_Damper, &eff_damper, &g_pEffect_damper, nullptr)))
+	{
+		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("Init Damper effect"));
+		return false;
+	}
+	// =========================================================
+
 	// INIT SinWave effect =====================================
 	DIEFFECT eff_sin = {};
 	DIPERIODIC cPeriod = { 0, 0, 0, 0 };
@@ -148,7 +194,7 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 	}
 	// =========================================================
 
-	if (!g_pEffect_spring && !g_pEffect_constforce && !g_pEffect_sin_wave)
+	if (!g_pEffect_spring && !g_pEffect_constforce && !g_pEffect_damper  && !g_pEffect_sin_wave)
 	{
 		UE_LOG(DirectInputFFBPluginLog, Error, TEXT("g_pEffect... is null"));
 		return false;
@@ -158,7 +204,18 @@ bool UDirectInputFFBBPLibrary::InitDevice()
 
 float UDirectInputFFBBPLibrary::SteeringWheelPosition(bool inDegree)
 {
-	if (inDegree) return float(currentSteeringWheel * STREERINGWHEEL_ANGLE_MAX); // Driver assumes a range of 750°
+	if (inDegree) {
+		DIJOYSTATE2 stateCurrent;
+		HRESULT hr = g_pDevice->GetDeviceState(sizeof(DIJOYSTATE2), &stateCurrent);
+		if (FAILED(hr)) {
+			UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("SteeringWheelPosition stateCurrent"));
+			return  float(currentSteeringWheel * STREERINGWHEEL_ANGLE_MAX);;
+		}
+
+		// Axis Event
+		currentSteeringWheel = float((stateCurrent.lX - 32767.5f) / 32767.5f);  // -1 / 1
+		return float(currentSteeringWheel * STREERINGWHEEL_ANGLE_MAX); // Driver assumes a range of 750°
+	}
 	return currentSteeringWheel;
 }
 
@@ -203,6 +260,49 @@ bool UDirectInputFFBBPLibrary::SetSpringParameters(int offset, int posCoef, int 
 	}
 	return true;
 }
+
+bool UDirectInputFFBBPLibrary::SetDamperParameters(int posSat)
+{
+	if (!g_pDevice || !g_pEffect_damper) {
+		return false;
+	}
+
+	HRESULT hr;
+	LONG rglDirection[2] = { 0 , 0 };
+	DICONDITION cd;
+	cd.lOffset = 0;
+	cd.lPositiveCoefficient = unsigned long(UDirectInputFFBBPLibrary::clip(posSat, 0, 10000));
+	cd.lNegativeCoefficient = unsigned long(UDirectInputFFBBPLibrary::clip(posSat, 0, 10000));
+	cd.dwPositiveSaturation = unsigned long(UDirectInputFFBBPLibrary::clip(posSat, 0, 10000));
+	cd.dwNegativeSaturation = unsigned long(UDirectInputFFBBPLibrary::clip(posSat, 0, 10000));
+	cd.lDeadBand = 0; //long(UDirectInputFFBBPLibrary::clip(deadZone, 0, 10000));
+
+	//rglDirection[0] = 0;// long(UDirectInputFFBBPLibrary::clip(offset, -10000, 10000));
+
+	DIEFFECT eff = {};
+	eff.dwSize = sizeof(DIEFFECT);
+	eff.dwFlags = DIEFF_CARTESIAN | DIEFF_OBJECTOFFSETS;
+	eff.cAxes = 1;
+	eff.rglDirection = rglDirectionWheel;
+	eff.lpEnvelope = 0;
+	eff.cbTypeSpecificParams = sizeof(DICONDITION);
+	eff.lpvTypeSpecificParams = &cd;
+	eff.dwStartDelay = 0;
+
+	if (FAILED(hr = g_pDevice->Acquire()))
+	{
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("Acquire SetDamperParameters"));
+		return false;
+	}
+	if (FAILED(hr = g_pEffect_damper->SetParameters(&eff, DIEP_DIRECTION | DIEP_TYPESPECIFICPARAMS | DIEP_START)))
+	{
+		UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("SetDamperParameters"));
+		g_pDevice->Unacquire();
+		return false;
+	}
+	return true;
+}
+
 
 
 bool UDirectInputFFBBPLibrary::SetSinWaveParameters(int offset, int magnitude, int phase, int period)
@@ -277,7 +377,7 @@ bool UDirectInputFFBBPLibrary::SetConstantForceParameters(int force)
 	return true;
 }
 
-bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, bool& handsOnWheel, float kp, float ki, float kd, float deltaTime)
+bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, bool& handsOnWheel, float kp, float ki, float kd, float speedVehicle, bool lkaIsOn, float deltaTime)
 {
 	if (!g_pDevice || !g_pEffect_constforce) {
 		handsOnWheel = false;
@@ -288,6 +388,18 @@ bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, boo
 	float position = UDirectInputFFBBPLibrary::SteeringWheelPosition(true);
 
 	error = goal - position;
+	if (!lkaIsOn) {
+		float coefError = UDirectInputFFBBPLibrary::clip(speedVehicle/25.0f, 0.0f, 1.0f);//std::max(0.0f, std::fmin(float(speedVehicle / 25.f), 1.0f));
+		if (UDirectInputFFBBPLibrary::enableDamper) {
+			UDirectInputFFBBPLibrary::SetDamperParameters((-(coefError - 1.0f)) * 2200);
+		}
+		error = error * coefError;
+	}
+	else {
+		UDirectInputFFBBPLibrary::SetDamperParameters(0);
+	}
+	UDirectInputFFBBPLibrary::enableDamper = true;
+
 	differential = (error - last_error) / deltaTime;
 	integral += (error + last_error) * deltaTime / 2;
 	total_error += abs(error);
@@ -296,7 +408,7 @@ bool UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(float consigne, boo
 	UDirectInputFFBBPLibrary::Hist_goal.push_back(goal);
 
 	torque = kp * error + ki * integral + kd * differential;
-	UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("LOG PID : %f,%f,%f,%d,%d,%d"), deltaTime, position, goal, torque, UDirectInputFFBBPLibrary::Hist_position.size(), UDirectInputFFBBPLibrary::Hist_goal.size());
+	UE_LOG(DirectInputFFBPluginLog, Warning, TEXT("LOG PID : %f,%f,%f,%f,%d,%d,%d"), deltaTime, position, goal, speedVehicle, torque, UDirectInputFFBBPLibrary::Hist_position.size(), UDirectInputFFBBPLibrary::Hist_goal.size());
 
 	bool retValue = UDirectInputFFBBPLibrary::SetConstantForceParameters(torque);
 
@@ -363,15 +475,24 @@ void UDirectInputFFBBPLibrary::CleanPIDValues()
 
 bool UDirectInputFFBBPLibrary::SetInitPositionStreeringWheel(float consigne)
 {
+	if (!g_pDevice){
+		return false;
+	}
 	UDirectInputFFBBPLibrary::CleanPIDValues();
+	// Force Fanatec move Left/Right
+	UDirectInputFFBBPLibrary::SetConstantForceParameters(MAX_TORQUE);
+	FPlatformProcess::Sleep(0.8);
+	UDirectInputFFBBPLibrary::SetConstantForceParameters(-MAX_TORQUE);
+	FPlatformProcess::Sleep(0.8);
 	int counterInf = 0;
 	bool run = true;
 	while (run)
 	{
-		UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(consigne, run, -45.f, 0.f, -2.8f);
+		UDirectInputFFBBPLibrary::enableDamper = false;
+		UDirectInputFFBBPLibrary::SetPIDConstantForceParameters(consigne, run, -45.f, 0.f, -2.8f, 100.f, true);
 		counterInf++;
-		run = counterInf < 100;
-		FPlatformProcess::Sleep(0.02);
+		run = counterInf < 50;
+		FPlatformProcess::Sleep(0.05);
 	}
 	FPlatformProcess::Sleep(0.2);
 	UDirectInputFFBBPLibrary::CleanPIDValues();

@@ -12,8 +12,8 @@ DECLARE_LOG_CATEGORY_EXTERN(DirectInputFFBPluginLog, Log, All);
 #include "DirectInputFFB/Public/DirectInputFFBResources.h"
 #include "DirectInputFFB/Public/DirectInputFFBBPLibrary.h"
 
-#define SAFE_DELETE(p)  { if(p) { delete (p);     (p)=nullptr; } }
-#define SAFE_RELEASE(p) { if(p) { (p)->Release(); (p)=nullptr; } }
+#define SAFE_DELETE_FFB(p)  { if(p) { delete (p);     (p)=nullptr; } }
+#define SAFE_RELEASE_FFB(p) { if(p) { (p)->Release(); (p)=nullptr; } }
 
 class DIRECTINPUTFFB_API  IDirectInputFFBDevice : public IInputDeviceModule
 {

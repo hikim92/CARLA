@@ -31,6 +31,8 @@ class UDirectInputFFBBPLibrary : public UBlueprintFunctionLibrary
 
 	static void SafeReleaseDevice();
 
+	static bool InitWheel();
+
 	/* Init device and effects */
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "DirectInputFFB Init", Keywords = "DirectInputFFB Init"), Category = "DirectInputFFB")
 	static bool InitDevice();
@@ -89,7 +91,7 @@ class UDirectInputFFBBPLibrary : public UBlueprintFunctionLibrary
 	deltaTime (float) : delta time in second
 	*/
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "DirectInputFFB Set PID ConstantForce", Keywords = "DirectInputFFB Set PID ConstantForce"), Category = "DirectInputFFB")
-	static bool SetPIDConstantForceParameters(float consigne, bool& handsOnWheel, float kp = -50.0f, float ki = -8.0f, float kd = -2.8f, float deltaTime = 0.02);
+	static bool SetPIDConstantForceParameters(float consigne, bool& handsOnWheel, float kp = -50.0f, float ki = -8.0f, float kd = -2.8f, float speedVehicle=10.0, bool lkaIsOn=false, float deltaTime = 0.02);
 
 	/* Clean values for PID */
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "DirectInputFFB Clean PID values", Keywords = "DirectInputFFB Clean PID values"), Category = "DirectInputFFB")
@@ -104,13 +106,18 @@ class UDirectInputFFBBPLibrary : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "DirectInputFFB Set Init position streering wheel", Keywords = "DirectInputFFB Set Init SteeringWheel"), Category = "DirectInputFFB")
 	static bool SetInitPositionStreeringWheel(float consigne);
 
+	static bool SetDamperParameters(int posSat);
+
 private:
 
 	static std::vector<float> Hist_position;
 	static std::vector<float> Hist_goal;
+	static std::vector<LPDIRECTINPUTDEVICE8> Devices;
+	static int currentDevice;
+	static bool enableDamper;
 
 	template<typename T>
-	static T clip(T value, T min, T max) {
+	static T clip(const T& value, const T& min, const T& max) {
 		return std::max(min, std::min(value, max));
 	}
 
@@ -130,8 +137,8 @@ private:
 
 		// We successfully created an IDirectInputDevice8.  So stop looking 
 		// for another one.
-		g_pDevice = pDevice;
-
-		return DIENUM_STOP;
+		UDirectInputFFBBPLibrary::Devices.push_back(pDevice);
+		return DIENUM_CONTINUE;
 	}
+
 };
