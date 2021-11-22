@@ -76,6 +76,14 @@ if(WIN32)
       "${BOOST_LIB_PATH}/libboost_system-*-mt-*.lib"
       "${BOOST_LIB_PATH}/libboost_filesystem-*-mt-*.lib")
   install(FILES ${boostlibs} DESTINATION lib)
+
+  # Install libjpeg headers.
+  file(GLOB jpeglib_includes "${LIBJPEG_INCLUDE_PATH}/*")
+  install(FILES ${jpeglib_includes} DESTINATION include)
+  # Installlibjpegzlib lib.
+  file(GLOB libjpeg_libraries "${LIBJPEG_LIB_PATH}/*")
+  install(FILES ${libjpeg_libraries} DESTINATION lib)
+
 endif()
 
 # carla_server library.
@@ -105,6 +113,7 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/sensor/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/*.h"
     "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
+    "${libcarla_source_path}/carla/sensor/s11n/ImageCompressSerializer.cpp"
     "${libcarla_source_path}/carla/streaming/*.h"
     "${libcarla_source_path}/carla/streaming/detail/*.cpp"
     "${libcarla_source_path}/carla/streaming/detail/*.h"
@@ -125,10 +134,20 @@ file(GLOB libcarla_server_sources
 if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_server STATIC ${libcarla_server_sources})
+  
+  #add_library(jpeg STATIC ${libcarla_carla_jpeglib})
 
   target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
+  
+  if (WIN32)
+    target_include_directories(carla_server SYSTEM PRIVATE
+      "${LIBJPEG_INCLUDE_PATH}")
+
+    target_link_libraries(carla_server "${LIBJPEG_LIB_PATH}/jpeg.lib")
+    target_link_libraries(carla_server "${LIBJPEG_LIB_PATH}/turbojpeg.lib")
+  endif()
 
   install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
@@ -139,11 +158,21 @@ endif()
 if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_server_debug STATIC ${libcarla_server_sources})
+  
+  #add_library(jpeg STATIC ${libcarla_carla_jpeglib})
 
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
+  
+  if (WIN32)
+    target_include_directories(carla_server_debug SYSTEM PRIVATE
+      "${LIBJPEG_INCLUDE_PATH}")
 
+    target_link_libraries(carla_server_debug "${LIBJPEG_LIB_PATH}/jpeg.lib")
+    target_link_libraries(carla_server_debug "${LIBJPEG_LIB_PATH}/turbojpeg.lib")
+  endif()
+  
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 
   set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")

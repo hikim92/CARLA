@@ -7,6 +7,7 @@
 #include "carla/StringUtil.h"
 
 #ifdef _WIN32
+#pragma comment(lib, "Shlwapi.lib")
 #  include <shlwapi.h>
 #else
 #  include <fnmatch.h>

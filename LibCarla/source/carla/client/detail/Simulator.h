@@ -437,6 +437,16 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Operations with the HUD
+    // =========================================================================
+    /// @{
+
+    void SetHUDInfo(uint32_t flags, int32_t value1, int32_t value2, int32_t value3) {
+      _client.SetHUDInfo(flags, value1, value2, value3);
+    }
+
+    /// @}
+    // =========================================================================
     /// @name Operations with vehicles
     // =========================================================================
     /// @{
@@ -479,6 +489,10 @@ namespace detail {
 
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
+    }
+
+    void ApplyAutopilotGoalToVehicle(Vehicle &vehicle, const geom::Location &location, double speed) {
+     _client.ApplyAutopilotGoalToVehicle(vehicle.GetId(), location, speed);
     }
 
     void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {

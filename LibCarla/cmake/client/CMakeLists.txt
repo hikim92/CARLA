@@ -69,9 +69,17 @@ if (WIN32)
     # Install libpng headers.
     file(GLOB pnglib_includes "${LIBPNG_INCLUDE_PATH}/*")
     install(FILES ${pnglib_includes} DESTINATION include)
-    # Install zlib lib.
+    # Install libpng lib.
     file(GLOB libpng_libraries "${LIBPNG_LIB_PATH}/*")
     install(FILES ${libpng_libraries} DESTINATION lib)
+
+    # Install libjpeg headers.
+    file(GLOB jpeglib_includes "${LIBJPEG_INCLUDE_PATH}/*")
+    install(FILES ${jpeglib_includes} DESTINATION include)
+    # Installlibjpegzlib lib.
+    file(GLOB libjpeg_libraries "${LIBJPEG_LIB_PATH}/*")
+    install(FILES ${libjpeg_libraries} DESTINATION lib)
+
 else ()
   # Install libpng library
   install(DIRECTORY "${LIBPNG_INCLUDE_PATH}" DESTINATION include/system)
@@ -262,6 +270,11 @@ if (LIBCARLA_BUILD_RELEASE)
       "${RECAST_INCLUDE_PATH}"
       "${LIBPNG_INCLUDE_PATH}")
 
+  if (WIN32)
+    target_include_directories(carla_client${carla_target_postfix} SYSTEM PRIVATE
+      "${LIBJPEG_INCLUDE_PATH}")
+  endif()
+
   if (BUILD_RSS_VARIANT)
     target_compile_definitions(carla_client${carla_target_postfix} PRIVATE RSS_ENABLED RSS_USE_TBB)
     target_link_libraries(carla_client${carla_target_postfix} ${ADRSS_LIBS} tbb)
@@ -277,6 +290,8 @@ if (LIBCARLA_BUILD_RELEASE)
     target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/Recast.lib")
     target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/Detour.lib")
     target_link_libraries(carla_client${carla_target_postfix} "${RECAST_LIB_PATH}/DetourCrowd.lib")
+    target_link_libraries(carla_client${carla_target_postfix} "${LIBJPEG_LIB_PATH}/jpeg.lib")
+    target_link_libraries(carla_client${carla_target_postfix} "${LIBJPEG_LIB_PATH}/turbojpeg.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
@@ -309,6 +324,11 @@ if (LIBCARLA_BUILD_DEBUG)
       ${ADRSS_INCLUDE_DIRS})
   endif()
 
+  if (WIN32)
+    target_include_directories(carla_client${carla_target_postfix}_debug SYSTEM PRIVATE
+      "${LIBJPEG_INCLUDE_PATH}")
+  endif()
+
   install(TARGETS carla_client${carla_target_postfix}_debug DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
@@ -317,6 +337,8 @@ if (LIBCARLA_BUILD_DEBUG)
     target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/Recast.lib")
     target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/Detour.lib")
     target_link_libraries(carla_client${carla_target_postfix}_debug "${RECAST_LIB_PATH}/DetourCrowd.lib")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${LIBJPEG_LIB_PATH}/jpeg.lib")
+    target_link_libraries(carla_client${carla_target_postfix}_debug "${LIBJPEG_LIB_PATH}/turbojpeg.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_CLIENT)
       set(CMAKE_CXX_FLAGS_DEBUG_CLIENT ${CMAKE_CXX_FLAGS_DEBUG})

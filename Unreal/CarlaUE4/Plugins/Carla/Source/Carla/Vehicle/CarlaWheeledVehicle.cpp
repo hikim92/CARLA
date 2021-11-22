@@ -24,6 +24,7 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Vehicle/ViaductAutopilotComponent.h"
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
@@ -42,11 +43,17 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
 
   GetVehicleMovementComponent()->bReverseAsBrake = false;
 
+  ViaductAutopilot = CreateDefaultSubobject<UViaductAutopilotComponent>("AutopilotComp");
+  AddOwnedComponent(ViaductAutopilot);
+
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
 }
 
-ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
+ACarlaWheeledVehicle::~ACarlaWheeledVehicle()
+{
+    ViaductAutopilot = nullptr;
+}
 
 void ACarlaWheeledVehicle::SetWheelCollision(UWheeledVehicleMovementComponent4W *Vehicle4W,
     const FVehiclePhysicsControl &PhysicsControl ) {
@@ -236,6 +243,30 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 // =============================================================================
 // -- Set functions ------------------------------------------------------------
 // =============================================================================
+
+void ACarlaWheeledVehicle::SetControl(const FVehicleControl &Control) {
+	ViaductAutopilot->lastVehicleControl = Control;
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
+{
+	if (InputControl.Priority <= Priority)
+	{
+		InputControl.Control = Control;
+		InputControl.Priority = Priority;
+		//UE_LOG(LogCarla, Warning, TEXT("ACarlaWheeledVehicle::ApplyVehicleControl"));
+		ViaductAutopilot->lastVehicleControl = Control;
+		ViaductAutopilot->lastPriority = Priority;
+		ViaductAutopilot->ForceVehicleControl = true;
+	}
+	else if (Priority == EVehicleInputPriority::Null)
+		StopForceVehicleControl();
+}
+
+void ACarlaWheeledVehicle::StopForceVehicleControl()
+{
+	ViaductAutopilot->ForceVehicleControl = false;
+}
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {

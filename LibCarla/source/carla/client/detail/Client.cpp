@@ -287,6 +287,13 @@ namespace detail {
     return _pimpl->AsyncCall("apply_physics_control", vehicle, physics_control);
   }
 
+  void Client::ApplyAutopilotGoalToVehicle(  
+      rpc::ActorId vehicle,   
+      const geom::Location &location, 
+      double speed) {
+    return _pimpl->AsyncCall("set_autopilot_goal", vehicle, location, speed);
+ }
+
   void Client::SetLightStateToVehicle(
       rpc::ActorId vehicle,
       const rpc::VehicleLightState &light_state) {
@@ -621,6 +628,10 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  void Client::SetHUDInfo(uint32_t flags, int32_t value1, int32_t value2, int32_t value3) {
+    _pimpl->AsyncCall("set_hud_info", flags, value1, value2, value3);
   }
 
 } // namespace detail

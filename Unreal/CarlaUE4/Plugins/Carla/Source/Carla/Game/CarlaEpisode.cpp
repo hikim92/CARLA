@@ -70,10 +70,12 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     FinalPath = FPaths::ProjectContentDir() + FinalPath;
     FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
 
-    if (FPaths::FileExists(FinalPath)) {
+    bIsFileFound = true; // In Package project, UE fail to check if map exist...
+    FinalPath = MapString;
+    /*if (FPaths::FileExists(FinalPath)) {
       bIsFileFound = true;
       FinalPath = MapString;
-    }
+    }*/
   }
   else
   {
@@ -319,9 +321,23 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
   {
-    ATrafficSignBase *Actor = *It;
-    check(Actor != nullptr);
-    FActorDescription Description;
+      ATrafficSignBase* Actor = *It;
+      check(Actor != nullptr);
+      FActorDescription Description;
+      if (Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_40 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_50 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_100 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_120 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_130)
+      {
+          Actor->SetActorHiddenInGame(true);     // Hide SpeedLimit for Viaduct
+          Actor->SetActorTickEnabled(false);     //
+          Actor->SetActorEnableCollision(false); //
+      }
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);

@@ -52,5 +52,5 @@ int32 UDefaultMovementComponent::GetVehicleCurrentGear() const
 
 float UDefaultMovementComponent::GetVehicleForwardSpeed() const
 {
-  return CarlaVehicle->GetVehicleMovementComponent()->GetForwardSpeed();
+  return CarlaVehicle->GetVehicleMovementComponent()->GetForwardSpeed() / 28.f;
 }
