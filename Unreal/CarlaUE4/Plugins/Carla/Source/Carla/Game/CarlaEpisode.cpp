@@ -321,12 +321,23 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
   for (TActorIterator<ATrafficSignBase> It(World); It; ++It)
   {
-    ATrafficSignBase *Actor = *It;
-    check(Actor != nullptr);
-    FActorDescription Description;
-    Actor->SetActorHiddenInGame(true);     // Hide SpeedLimit for Viaduct
-    Actor->SetActorTickEnabled(false);     //
-    Actor->SetActorEnableCollision(false); //
+      ATrafficSignBase* Actor = *It;
+      check(Actor != nullptr);
+      FActorDescription Description;
+      if (Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_40 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_50 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_100 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_120 ||
+          Actor->GetTrafficSignState() == ETrafficSignState::SpeedLimit_130)
+      {
+          Actor->SetActorHiddenInGame(true);     // Hide SpeedLimit for Viaduct
+          Actor->SetActorTickEnabled(false);     //
+          Actor->SetActorEnableCollision(false); //
+      }
     Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
