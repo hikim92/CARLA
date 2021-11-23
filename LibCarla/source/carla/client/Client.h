@@ -153,6 +153,12 @@ namespace client {
       return responses;
     }
 
+    void SetHUDInfo(uint32_t flags,int32_t value1,int32_t value2,int32_t value3)
+    {
+      _simulator->SetHUDInfo(flags,value1,value2,value3);
+    }
+
+
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;

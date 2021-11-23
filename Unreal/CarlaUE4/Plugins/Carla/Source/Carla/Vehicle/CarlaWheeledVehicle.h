@@ -18,6 +18,7 @@
 #include "VehicleAnimInstance.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "MovementComponents/BaseCarlaMovementComponent.h"
+#include "Vehicle/ViaductAutopilotComponent.h"
 
 #include "CoreMinimal.h"
 
@@ -30,6 +31,7 @@
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
+class UViaductAutopilotComponent;
 
 UENUM()
 enum class EVehicleWheelLocation : uint8 {
@@ -125,6 +127,13 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetMaximumSteerAngle() const;
 
+
+  UFUNCTION(Category = "Viaduct", BlueprintCallable)
+  UViaductAutopilotComponent *GetAutopilotComponent() const
+  {
+	  return ViaductAutopilot;
+  }
+
   /// @}
   // ===========================================================================
   /// @name AI debug state
@@ -143,6 +152,12 @@ public:
   {
     return State;
   }
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ComputeAutoPilot();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ComputeFakeAutoPilot();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
@@ -176,14 +191,10 @@ public:
 public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
-  {
-    if (InputControl.Priority <= Priority)
-    {
-      InputControl.Control = Control;
-      InputControl.Priority = Priority;
-    }
-  }
+  void ApplyVehicleControl(const FVehicleControl& Control, EVehicleInputPriority Priority);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetControl(const FVehicleControl& Control);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ActivateVelocityControl(const FVector &Velocity);
@@ -196,6 +207,9 @@ public:
 
   /// @todo This function should be private to AWheeledVehicleAIController.
   void FlushVehicleControl();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void StopForceVehicleControl();
 
   /// @}
   // ===========================================================================
@@ -237,6 +251,13 @@ public:
     SetHandbrakeInput(false);
   }
 
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void ActivateAutopilotComponent(bool bActivate);
+
+  /// Set the next goal destination in front of this vehicle
+  UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
+  void SetAutopilotGoal(const FVector& location, float speed);
+
   TArray<float> GetWheelsFrictionScale();
 
   void SetWheelsFrictionScale(TArray<float> &WheelsFrictionScale);
@@ -276,6 +297,9 @@ protected:
   void ResetConstraints();
 
 private:
+
+  UPROPERTY(Category = "Viaduct", VisibleAnywhere)
+  UViaductAutopilotComponent* ViaductAutopilot;
 
   /// Current state of the vehicle controller (for debugging purposes).
   UPROPERTY(Category = "AI Controller", VisibleAnywhere)

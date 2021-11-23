@@ -207,6 +207,7 @@ void export_client() {
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
+    .def("set_hud_info", &cc::Client::SetHUDInfo, (arg("flags"), arg("value1"), arg("value2"), arg("value3")))
     .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))
   ;
 }

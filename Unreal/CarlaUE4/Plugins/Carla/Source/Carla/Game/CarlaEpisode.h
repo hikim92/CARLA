@@ -13,6 +13,7 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Settings/HUDValues.h"
 
 #include "GameFramework/Pawn.h"
 
@@ -69,6 +70,12 @@ public:
   const FEpisodeSettings &GetSettings() const
   {
     return EpisodeSettings;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  const FHUDValues &GetHUDValues() const
+  {
+    return HUDValues;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -253,6 +260,24 @@ public:
     ActorDispatcher->WakeActorUp(ActorId, this);
   }
 
+  /// Find a Carla actor by id.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FCarlaActor* FindActor(FCarlaActor::IdType ActorId) const
+  {
+      return ActorDispatcher->GetActorRegistry().FindCarlaActor(ActorId);
+  }
+
+  /// Find the actor view of @a Actor.
+  ///
+  /// If the actor is not found or is pending kill, the returned view is
+  /// invalid.
+  FCarlaActor* FindActor(AActor* Actor) const
+  {
+      return ActorDispatcher->GetActorRegistry().FindCarlaActor(Actor);
+  }
+
   // ===========================================================================
   // -- Other methods ----------------------------------------------------------
   // ===========================================================================
@@ -281,6 +306,14 @@ public:
   CarlaReplayer *GetReplayer() const
   {
     return Recorder->GetReplayer();
+  }
+
+  void SetHUDInfo( const uint32_t flags, const int32_t value1, const int32_t value2, const int32_t value3)
+  {
+    HUDValues.flags = flags;
+    HUDValues.value1 = value1;
+    HUDValues.value2 = value2;
+    HUDValues.value3 = value3;
   }
 
   std::string StartRecorder(std::string name, bool AdditionalData);
@@ -334,6 +367,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   AWeather *Weather = nullptr;
+
+  UPROPERTY(VisibleAnywhere)
+  FHUDValues HUDValues;
 
   ACarlaRecorder *Recorder = nullptr;
 

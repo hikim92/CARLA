@@ -157,6 +157,11 @@ namespace detail {
         rpc::ActorId vehicle,
         const rpc::VehiclePhysicsControl &physics_control);
 
+    void ApplyAutopilotGoalToVehicle(
+        rpc::ActorId vehicle,
+        const geom::Location &location,
+        double speed);
+
     void SetLightStateToVehicle(
         rpc::ActorId vehicle,
         const rpc::VehicleLightState &light_state);
@@ -315,6 +320,12 @@ namespace detail {
     void FreezeTrafficLight(
         rpc::ActorId traffic_light,
         bool freeze);
+
+    void SetHUDInfo(
+        uint32_t flags,
+        int32_t value1,
+        int32_t value2,
+        int32_t value3);
 
     void ResetTrafficLightGroup(
         rpc::ActorId traffic_light);

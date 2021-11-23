@@ -133,17 +133,9 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
   TRACE_CPUPROFILER_EVENT_SCOPE(AWheeledVehicleAIController::Tick);
   Super::Tick(DeltaTime);
 
-  if (!IsPossessingAVehicle())
-  {
-    return;
-  }
+  if (!IsPossessingAVehicle()){ return; }
 
-  if (!bAutopilotEnabled && !bControlIsSticky)
-  {
-    Vehicle->ApplyVehicleControl(FVehicleControl{}, EVehicleInputPriority::Relaxation);
-  }
-
-  Vehicle->FlushVehicleControl();
+  Vehicle->ComputeAutoPilot();
 }
 
 // =============================================================================
