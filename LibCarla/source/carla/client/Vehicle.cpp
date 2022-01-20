@@ -59,6 +59,10 @@ namespace client {
     GetEpisode().Lock()->ApplyPhysicsControlToVehicle(*this, physics_control);
   }
 
+  void Vehicle::SetAutopilotGoal(const geom::Location &location, double speed) {
+    GetEpisode().Lock()->ApplyAutopilotGoalToVehicle(*this, location, speed);
+  }
+
   void Vehicle::OpenDoor(const VehicleDoor door_idx) {
     GetEpisode().Lock()->OpenVehicleDoor(*this, rpc::VehicleDoor(door_idx));
   }

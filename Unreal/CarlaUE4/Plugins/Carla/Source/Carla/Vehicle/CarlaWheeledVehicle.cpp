@@ -690,6 +690,36 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
   ShowDebugTelemetry(false);
 }
 
+void ACarlaWheeledVehicle::ComputeAutoPilot()
+{
+	FVehicleControl autoctrl = ViaductAutopilot->ComputeVehicleControl();
+    ApplyVehicleControl(autoctrl, EVehicleInputPriority::Autopilot );
+
+    FlushVehicleControl();
+}
+
+void ACarlaWheeledVehicle::ComputeFakeAutoPilot()
+{
+	FVehicleControl autoctrl = ViaductAutopilot->ComputeFakeVehicleControl();
+	ApplyVehicleControl(autoctrl, EVehicleInputPriority::Autopilot);
+
+	FlushVehicleControl();
+}
+
+void ACarlaWheeledVehicle::SetAutopilotGoal(const FVector& location, float speed)
+{
+    if (ViaductAutopilot != nullptr) {
+        ViaductAutopilot->SetAutopilotGoal(location, speed);
+    }
+}
+
+void ACarlaWheeledVehicle::ActivateAutopilotComponent(bool bActivate)
+{
+    if (ViaductAutopilot != nullptr) {
+        ViaductAutopilot->ActivateAutopilot(bActivate);
+    }
+}
+
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
     UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));

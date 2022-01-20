@@ -1190,6 +1190,29 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+BIND_SYNC(set_autopilot_goal) << [this](
+      cr::ActorId ActorId,
+      cr::Location Location,
+      double speed) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor * ActorView = Episode->FindActor(ActorId);
+    if (ActorView == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor autopilot goal: actor not found");
+    }
+    ACarlaWheeledVehicle* Vehicle = Cast<ACarlaWheeledVehicle>(ActorView->GetActor());
+    if (Vehicle == nullptr)
+    {
+      RESPOND_ERROR("unable to apply actor autopilot goal: actor is not a vehicle");
+    }
+    else
+    {
+		 Vehicle->ActivateAutopilotComponent(true);
+		 Vehicle->SetAutopilotGoal(Location, speed);
+    }
+    return R<void>::Success();
+  };
 
   BIND_SYNC(open_vehicle_door) << [this](
       cr::ActorId ActorId,
